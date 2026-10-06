@@ -16,7 +16,7 @@
 
 <div align="center">
 
-<img src="./assets/screenshots/home.png" width="250" />
+<img src="./assets/screenshots/1" width="250" />
 <img src="./assets/screenshots/dashboard.png" width="250" />
 <img src="./assets/screenshots/profile.png" width="250" />
 
