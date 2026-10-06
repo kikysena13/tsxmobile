@@ -16,9 +16,12 @@
 
 <div align="center">
 
-<img src="./src/screenshots/1.png" width="250" />
-<img src="./assets/screenshots/dashboard.png" width="250" />
-<img src="./assets/screenshots/profile.png" width="250" />
+<img src="./src/screenshots/1.png" width="300" />
+<img src="./src/screenshots/2.png" width="300" />
+<img src="./src/screenshots/3.png" width="300" />
+<img src="./src/screenshots/4.png" width="300" />
+<img src="./src/screenshots/5.png" width="300" />
+
 
 </div>
 
