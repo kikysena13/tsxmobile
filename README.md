@@ -1,4 +1,4 @@
-# 🚀 ServerHub
+# ServerHub
 
 > Modern mobile application built with Expo & React Native.
 
@@ -46,7 +46,7 @@
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone repository
 
