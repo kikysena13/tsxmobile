@@ -13,52 +13,58 @@ export const palette = {
 export type Member = {
   name: string;
   handle: string;
-  points: string;
-  messages: string;
+  points: number;
+  messages: number;
   initials: string;
 };
+
+const numberFormatter = new Intl.NumberFormat("en-US");
+
+export function formatNumber(value: number): string {
+  return numberFormatter.format(value);
+}
 
 export const topMembers: Member[] = [
   {
     name: "Mika Tanaka",
     handle: "@mika",
-    points: "12,840 XP",
-    messages: "2,481",
+    points: 12840,
+    messages: 2481,
     initials: "MT",
   },
   {
     name: "Jordan Lee",
     handle: "@jlee",
-    points: "10,290 XP",
-    messages: "1,936",
+    points: 10290,
+    messages: 1936,
     initials: "JL",
   },
   {
     name: "Sofia Reyes",
     handle: "@sofia",
-    points: "9,640 XP",
-    messages: "1,704",
+    points: 9640,
+    messages: 1704,
     initials: "SR",
   },
   {
     name: "Kai Nakamura",
     handle: "@kain",
-    points: "8,920 XP",
-    messages: "1,562",
+    points: 8920,
+    messages: 1562,
     initials: "KN",
   },
   {
     name: "Avery Morgan",
     handle: "@avery",
-    points: "8,105 XP",
-    messages: "1,408",
+    points: 8105,
+    messages: 1408,
     initials: "AM",
   },
   {
     name: "Noah Williams",
     handle: "@noahw",
-    points: "7,680 XP",
-    messages: "1,302",
+    points: 7680,
+    messages: 1302,
     initials: "NW",
   },
 ];
