@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { palette, type Member } from "@/constants/serverhub-data";
+import { formatNumber, palette, type Member } from "@/constants/serverhub-data";
 
 export function AppScreen({ children }: PropsWithChildren) {
   return (
@@ -122,7 +122,9 @@ export function LeaderboardRow({
       </View>
       <View style={styles.memberScore}>
         <Text style={styles.memberPoints}>
-          {compact ? member.messages : member.points}
+          {compact
+            ? formatNumber(member.messages)
+            : `${formatNumber(member.points)} XP`}
         </Text>
         {compact ? (
           <Text style={styles.memberScoreCaption}>messages</Text>
