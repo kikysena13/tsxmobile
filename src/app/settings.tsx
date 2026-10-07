@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { Pressable, StyleSheet, Switch, Text, View } from "react-native";
 
 import {
     AppScreen,
@@ -8,6 +8,7 @@ import {
     SectionHeading,
 } from "@/components/serverhub-ui";
 import { palette } from "@/constants/serverhub-data";
+import { useServerHubAuth } from "@/context/serverhub-auth";
 
 function SettingRow({
   title,
@@ -38,6 +39,7 @@ function SettingRow({
 }
 
 export default function SettingsScreen() {
+  const { session, signOut } = useServerHubAuth();
   const [weeklyReport, setWeeklyReport] = useState(true);
   const [joinAlerts, setJoinAlerts] = useState(true);
   const [moderationAlerts, setModerationAlerts] = useState(false);
@@ -53,8 +55,10 @@ export default function SettingsScreen() {
         <SectionHeading title="Server" />
         <View style={styles.serverRow}>
           <View style={styles.serverInfo}>
-            <Text style={styles.serverName}>The Cozy Corner</Text>
-            <Text style={styles.serverMeta}>Demo data · Discord</Text>
+            <Text style={styles.serverName}>
+              {session?.guild.name || "Discord server"}
+            </Text>
+            <Text style={styles.serverMeta}>Discord · Admin access</Text>
           </View>
         </View>
       </Panel>
@@ -80,6 +84,16 @@ export default function SettingsScreen() {
           onValueChange={setModerationAlerts}
         />
       </Panel>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => void signOut()}
+        style={({ pressed }) => [
+          styles.signOutButton,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text style={styles.signOutText}>Sign out from Discord</Text>
+      </Pressable>
     </AppScreen>
   );
 }
@@ -101,4 +115,7 @@ const styles = StyleSheet.create({
   settingCopy: { flex: 1, gap: 5 },
   settingTitle: { color: palette.text, fontSize: 12, fontWeight: "700" },
   settingDescription: { color: palette.muted, fontSize: 10, lineHeight: 15 },
+  signOutButton: { alignSelf: "flex-start", paddingVertical: 8 },
+  signOutText: { color: palette.muted, fontSize: 12, fontWeight: "600" },
+  pressed: { opacity: 0.65 },
 });

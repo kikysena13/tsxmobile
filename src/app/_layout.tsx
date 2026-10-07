@@ -2,6 +2,10 @@ import { DarkTheme, Tabs, ThemeProvider } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { palette } from "@/constants/serverhub-data";
+import {
+    ServerHubAuthGate,
+    ServerHubAuthProvider,
+} from "@/context/serverhub-auth";
 
 const tabOptions = {
   headerShown: false,
@@ -21,12 +25,19 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={DarkTheme}>
       <StatusBar style="light" />
-      <Tabs screenOptions={tabOptions}>
-        <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
-        <Tabs.Screen name="leaderboard" options={{ title: "Leaderboard" }} />
-        <Tabs.Screen name="activity" options={{ title: "Activity" }} />
-        <Tabs.Screen name="settings" options={{ title: "Settings" }} />
-      </Tabs>
+      <ServerHubAuthProvider>
+        <ServerHubAuthGate>
+          <Tabs screenOptions={tabOptions}>
+            <Tabs.Screen name="index" options={{ title: "Dashboard" }} />
+            <Tabs.Screen
+              name="leaderboard"
+              options={{ title: "Leaderboard" }}
+            />
+            <Tabs.Screen name="activity" options={{ title: "Activity" }} />
+            <Tabs.Screen name="settings" options={{ title: "Settings" }} />
+          </Tabs>
+        </ServerHubAuthGate>
+      </ServerHubAuthProvider>
     </ThemeProvider>
   );
 }

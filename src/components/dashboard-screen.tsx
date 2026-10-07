@@ -1,68 +1,110 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 
 import {
-  AppScreen,
-  LeaderboardRow,
-  MetricCard,
-  PageTitle,
-  Panel,
-  SectionHeading,
+    AppScreen,
+    LeaderboardRow,
+    MetricCard,
+    PageTitle,
+    Panel,
+    SectionHeading,
 } from "@/components/serverhub-ui";
-import {
-  activitySeries,
-  palette,
-  topMembers,
-  type ChartRange,
-} from "@/constants/serverhub-data";
+import { formatNumber, palette } from "@/constants/serverhub-data";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { toMember } from "@/lib/dashboard-format";
+import type { ActivityRange } from "@/lib/serverhub-api";
 
-const ranges: { label: string; value: ChartRange }[] = [
+const ranges: { label: string; value: ActivityRange }[] = [
   { label: "Day", value: "24h" },
   { label: "Week", value: "7d" },
   { label: "Month", value: "30d" },
 ];
 
-const chartTotals: Record<ChartRange, string> = {
-  "24h": "2,840 today",
-  "7d": "18,420 this week",
-  "30d": "74,120 this month",
-};
-
 export function DashboardScreen() {
-  const [range, setRange] = useState<ChartRange>("7d");
-  const chart = activitySeries[range];
-  const chartMax = Math.max(...chart.map((point) => point.value));
+  const [range, setRange] = useState<ActivityRange>("7d");
+  const { data, isLoading, error, refresh } = useDashboardData();
+  const chart = data?.messageActivity[range] || [];
+  const chartMax = Math.max(1, ...chart.map((point) => point.value));
+  const chartTotal = chart.reduce((total, point) => total + point.value, 0);
+  const members = (data?.leaderboard || []).map(toMember);
 
   return (
     <AppScreen>
       <PageTitle
-        title="The Cozy Corner"
-        subtitle="Server overview · Demo data"
+        title={data?.server.name || "Server overview"}
+        subtitle="Data langsung dari server Discord"
       />
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {!data ? (
+        <Panel>
+          {isLoading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={palette.accent} />
+              <Text style={styles.emptyText}>
+                Menghubungkan ke bot Discord…
+              </Text>
+            </View>
+          ) : (
+            <>
+              <Text style={styles.emptyText}>
+                Data dashboard belum tersedia.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={refresh}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryText}>Coba lagi</Text>
+              </Pressable>
+            </>
+          )}
+        </Panel>
+      ) : null}
 
       <View style={styles.metricsGrid}>
         <MetricCard
           label="Total members"
-          value="24,892"
-          change="Up 8.2% this month"
+          value={data ? formatNumber(data.metrics.memberCount) : "—"}
+          change="Server members"
         />
         <MetricCard
           label="Online now"
-          value="3,412"
-          change="13.7% of the server"
+          value={
+            data?.metrics.onlineCount === null || !data
+              ? "—"
+              : formatNumber(data.metrics.onlineCount)
+          }
+          change={
+            !data || data.metrics.onlineCount === null
+              ? "Presence intent belum aktif"
+              : "Online members"
+          }
         />
         <MetricCard
           label="Messages"
-          value="128.6k"
-          change="Up 12.4% this week"
+          value={data ? formatNumber(data.metrics.messageCount) : "—"}
+          change="Total sejak tracking aktif"
         />
-        <MetricCard label="In voice" value="186" change="Across 12 channels" />
+        <MetricCard
+          label="In voice"
+          value={data ? formatNumber(data.metrics.voiceCount) : "—"}
+          change={`${data?.voiceChannels.length || 0} active channels`}
+        />
       </View>
 
       <Panel>
         <View style={styles.chartHeading}>
           <Text style={styles.panelTitle}>Messages</Text>
-          <Text style={styles.chartSummary}>{chartTotals[range]}</Text>
+          <Text style={styles.chartSummary}>
+            {data ? `${formatNumber(chartTotal)} · ${range}` : "—"}
+          </Text>
         </View>
         <View style={styles.rangeSelector}>
           {ranges.map((item) => (
@@ -93,31 +135,41 @@ export function DashboardScreen() {
             <View style={styles.chartGuide} />
             <View style={styles.chartGuide} />
           </View>
-          <View style={styles.barsRow}>
-            {chart.map((point, index) => (
-              <View key={`${range}-${point.label}`} style={styles.barColumn}>
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      height: `${Math.max((point.value / chartMax) * 100, 12)}%`,
-                      backgroundColor:
-                        index === chart.length - 1 ? palette.accent : "#454A52",
-                      opacity: index === chart.length - 1 ? 1 : 0.8,
-                    },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.barLabel,
-                    index === chart.length - 1 && styles.barLabelActive,
-                  ]}
-                >
-                  {point.label}
-                </Text>
-              </View>
-            ))}
-          </View>
+          {!data ? null : chartTotal > 0 ? (
+            <View style={styles.barsRow}>
+              {chart.map((point, index) => (
+                <View key={`${range}-${point.label}`} style={styles.barColumn}>
+                  <View
+                    style={[
+                      styles.bar,
+                      {
+                        height: `${Math.max((point.value / chartMax) * 100, 12)}%`,
+                        backgroundColor:
+                          index === chart.length - 1
+                            ? palette.accent
+                            : "#454A52",
+                        opacity: index === chart.length - 1 ? 1 : 0.8,
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.barLabel,
+                      index === chart.length - 1 && styles.barLabelActive,
+                    ]}
+                  >
+                    {point.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.chartEmpty}>
+              <Text style={styles.emptyText}>
+                Riwayat pesan mulai terkumpul setelah bot aktif.
+              </Text>
+            </View>
+          )}
         </View>
       </Panel>
 
@@ -126,49 +178,61 @@ export function DashboardScreen() {
         <View style={styles.voiceTopline}>
           <View>
             <Text style={styles.voiceValue}>
-              186 <Text style={styles.voiceUnit}>members</Text>
+              {data ? formatNumber(data.metrics.voiceCount) : "—"}{" "}
+              <Text style={styles.voiceUnit}>members</Text>
             </Text>
             <Text style={styles.voiceSubtitle}>
-              hanging out across 12 channels
+              across {data?.voiceChannels.length || 0} active channels
             </Text>
           </View>
         </View>
         <View style={styles.voiceChannels}>
-          <View style={styles.channelRow}>
-            <View style={styles.channelIdentity}>
-              <Text style={styles.channelName}>Cozy Lounge</Text>
+          {(data?.voiceChannels || []).map((channel) => (
+            <View key={channel.name} style={styles.channelRow}>
+              <View style={styles.channelIdentity}>
+                <Text style={styles.channelName}>{channel.name}</Text>
+              </View>
+              <Text style={styles.channelCount}>
+                {formatNumber(channel.count)}{" "}
+                <Text style={styles.channelMembers}>members</Text>
+              </Text>
             </View>
-            <Text style={styles.channelCount}>
-              42 <Text style={styles.channelMembers}>members</Text>
+          ))}
+          {data && data.voiceChannels.length === 0 ? (
+            <Text style={styles.emptyText}>
+              Tidak ada member di voice saat ini.
             </Text>
-          </View>
-          <View style={styles.channelRow}>
-            <View style={styles.channelIdentity}>
-              <Text style={styles.channelName}>Game Night</Text>
-            </View>
-            <Text style={styles.channelCount}>
-              28 <Text style={styles.channelMembers}>members</Text>
-            </Text>
-          </View>
+          ) : null}
         </View>
       </Panel>
 
       <Panel>
         <SectionHeading title="Top members" />
-        {topMembers.slice(0, 3).map((member, index) => (
-          <LeaderboardRow
-            key={member.handle}
-            member={member}
-            rank={index + 1}
-            compact
-          />
-        ))}
+        {members.length ? (
+          members
+            .slice(0, 3)
+            .map((member, index) => (
+              <LeaderboardRow
+                key={member.handle}
+                member={member}
+                rank={index + 1}
+                compact
+              />
+            ))
+        ) : (
+          <Text style={styles.emptyText}>Leaderboard belum tersedia.</Text>
+        )}
       </Panel>
     </AppScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  emptyText: { color: palette.muted, fontSize: 12, lineHeight: 18 },
+  errorText: { color: "#E29B9B", fontSize: 12, lineHeight: 18 },
+  retryButton: { alignSelf: "flex-start", paddingVertical: 8, marginTop: 6 },
+  retryText: { color: palette.text, fontSize: 12, fontWeight: "600" },
   metricsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   chartHeading: {
     flexDirection: "row",
@@ -192,6 +256,7 @@ const styles = StyleSheet.create({
   rangeText: { color: palette.faint, fontSize: 11, fontWeight: "500" },
   rangeTextActive: { color: palette.text },
   chartArea: { height: 128, position: "relative" },
+  chartEmpty: { height: 90, justifyContent: "center", alignItems: "center" },
   chartGuides: {
     ...StyleSheet.absoluteFill,
     justifyContent: "space-between",
